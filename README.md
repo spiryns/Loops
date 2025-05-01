@@ -64,7 +64,7 @@ Git is een versiebeheersysteem dat wordt gebruikt om code bij te houden, versies
     4. Push de wijzigingen naar GitHub.
 7. Bekijk de wijzigingen online [IEDEREEN]
     1. Ga naar je GitHub repository en bekijk de commit geschiedenis.
-       1. ![commits](./imgs/commits.png)
+       ![commits](./imgs/commits.png)
        2. klik op commits
           1. Hier zie je de commits die iedereen gemaakt heeft, **met de boodschappen erbij**
           2. klik op de laatst gemaakte commit
