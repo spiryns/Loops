@@ -105,9 +105,7 @@ De schema’s staan in de map `imgs`:
 - Alle bedrading en componenten zijn netjes weggewerkt, met toegang tot de USB-poort.
 
 ## Verbeteringen
-
-- Kalibratieprocedure voor de MPU6050  
-- Geavanceerde filteralgoritmes (bv. Kalman)  
+ 
 - Extra knoppen voor menu en instellingen  
 - Geluidsfeedback via een buzzer  
 - Draadloze verbinding (Bluetooth of Wi-Fi)
