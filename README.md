@@ -1,163 +1,65 @@
-Loops
+# Loops
 
-Een interactieve, bewegingsgestuurde vlieggame met een Arduino UNO en een MPU6050, gecombineerd met een Processing-sketch voor de gameplay en real-time LED-feedback via een custom controller-behuizing.
+Een interactieve, bewegingsgestuurde vlieggame met een Arduino UNO en een MPU6050, gecombineerd met een Processing-sketch voor de gameplay en real‐time LED-feedback via een custom controller-behuizing.
 
-Inhoud
+## Inhoud
 
-Introductie
+- [Introductie](#introductie)
+- [Doel](#doel)
+- [Materialen](#materialen)
+- [Bedrading](#bedrading)
+- [Projectstructuur](#projectstructuur)
+- [Installatie & Bibliotheken](#installatie--bibliotheken)
+- [Gebruik](#gebruik)  
+  - [Bewegingsinput](#bewegingsinput)  
+  - [Seriële communicatie](#seriële-communicatie)  
+  - [LED- en knop-feedback](#led--en-knop-feedback)  
+- [Controller-behuizing](#controller-behuizing)
+- [Verbeteringen](#verbeteringen)
+- [Conclusie](#conclusie)
+- [Licentie](#licentie)
 
-Doel
-
-Materialen
-
-Bedrading
-
-Projectstructuur
-
-Installatie & Bibliotheken
-
-Gebruik
-
-Bewegingsinput
-
-Seriële communicatie
-
-LED- en knop-feedback
-
-Controller-behuizing
-
-Verbeteringen
-
-Conclusie
-
-Licentie
-
-Introductie
+## Introductie
 
 Dit project maakt gebruik van een MPU6050 motion sensor op een Arduino UNO om hellingshoek en beweging van een handcontroller te meten. De verkregen data stuurt de Arduino via de seriële poort naar een Processing-sketch, waarin een vliegtuig in een 3D-wereld bestuurd wordt.
 
 Afhankelijk van acties in de game én van streaks (3 events binnen een bepaald tijdsvenster) licht de Arduino rode of blauwe LEDs op als visuele feedback.
 
-Doel
+## Doel
 
-De MPU6050 gebruiken om beweging en oriëntatie van een controller te meten en deze in te zetten als besturing voor een vliegsimulator.
+- De MPU6050 gebruiken om beweging en oriëntatie van een controller te meten en deze in te zetten als besturing voor een vliegsimulator.
+- In-game events (door ringen vliegen, targets raken) naar de Arduino sturen om LEDs te bedienen:  
+  - **Rode LED** knippert bij een ringpassage of ring-streak.  
+  - **Blauwe LED** knippert bij een target-hit of target-streak.  
+- Een triggerknop op de handgreep gebruiken voor schieten.  
+- Een startknop gebruiken om het spel te starten.
 
-In-game events (door ringen vliegen, targets raken) naar de Arduino sturen om LEDs te bedienen:
+## Materialen
 
-Rode LED knippert bij een ringpassage of ring-streak.
+- Arduino UNO  
+- MPU6050 (gyroscoop + accelerometer module)  
+- Rode LED + 220 Ω weerstand  
+- Blauwe LED + 150 Ω weerstand  
+- Drukknop (Shoot) + interne pull-up  
+- Drukknop (Start) + interne pull-up  
+- 3D-geprinte controller-behuizing met handgreep en trigger-slot  
+- Optioneel breadboard en bedrading  
+- USB-kabel
 
-Blauwe LED knippert bij een target-hit of target-streak.
+## Bedrading
 
-Een triggerknop op de handgreep gebruiken voor schieten.
+De schema’s staan in de map `imgs`:
 
-Een startknop gebruiken om het spel te starten.
+- `imgs/schema.png` — basisbekabeling:  
+  - I2C: **A4 (SDA)** → MPU6050 SDA, **A5 (SCL)** → MPU6050 SCL  
+  - **8** → Rode LED via 220 Ω → GND  
+  - **10** → Blauwe LED via 150 Ω → GND  
+  - **7** → SHOOT-knop → GND (INPUT_PULLUP)  
+  - **1** → START-knop → GND (INPUT_PULLUP)  
+- `imgs/geschakeld_schema.jpg` — gedetailleerde schakeling  
+- `imgs/arduino.png` — pinout Arduino UNO  
 
-Materialen
+![Bedradingsschema](imgs/schema.png)
 
-Arduino UNO
+## Projectstructuur
 
-MPU6050 (gyroscoop + accelerometer module)
-
-Rode LED + 220 Ω weerstand
-
-Blauwe LED + 150 Ω weerstand
-
-Drukknop (Shoot) + interne pull-up
-
-Drukknop (Start) + interne pull-up
-
-3D-geprinte controller-behuizing met handgreep en trigger-slot
-
-Optioneel breadboard en bedrading
-
-USB-kabel
-
-Bedrading
-
-De schema’s staan in de map imgs:
-
-imgs/schema.png — basisbekabeling:
-
-I2C: A4 (SDA) → MPU6050 SDA, A5 (SCL) → MPU6050 SCL
-
-8 → Rode LED via 220 Ω → GND
-
-10 → Blauwe LED via 150 Ω → GND
-
-7 → SHOOT-knop → GND (INPUT_PULLUP)
-
-1 → START-knop → GND (INPUT_PULLUP)
-
-imgs/geschakeld_schema.jpg — gedetailleerde schakeling
-
-imgs/arduino.png — pinout Arduino UNO
-
-Gebruik
-
-Bewegingsinput
-
-De Arduino leest elke 10 ms gyro- en accelerometerdata van de MPU6050.
-
-Pitch en roll worden gecombineerd via een complementair filter (α = 0.98) voor stabiele besturing.
-
-De berekende hoeken (in graden) worden verzonden naar Processing als pitch,roll.
-
-Seriële communicatie
-
-Arduino → Processing:
-
-Serial.print(pitch, 2);
-Serial.print(",");
-Serial.println(roll, 2);
-
-Processing → Arduino:
-
-port.write("R," + ringScore + "\n"); (ring-event)
-
-port.write("T," + targetScore + "\n"); (target-event)
-
-port.write("SHOOT\n"); (shoot-knop)
-
-port.write("START\n"); (start-knop)
-
-LED- en knop-feedback
-
-In de Arduino-loop() worden inkomende commando’s gelezen:
-
-Ring-event (R,n) → handleEvent(redLedPin, ...)
-
-Target-event (T,n) → handleEvent(blueLedPin, ...)
-
-handleEvent() verzorgt een korte flash (300 ms) en telt events voor streaks:
-
-Streak: 3 events binnen 5000 ms ⇒ extra snelle flash-sequentie.
-
-Shoot- en startknop zijn geconfigureerd als INPUT_PULLUP; bij drukken wordt SHOOT of START verzonden.
-
-Controller-behuizing
-
-Behuizing is 3D-geprint en huisvest Arduino, MPU6050, LEDs en knoppen.
-
-De triggerknop voor schieten zit ergonomisch op de handgreep.
-
-Alle componenten en bedrading zijn netjes weggewerkt, met toegang tot de USB-poort.
-
-Verbeteringen
-
-Kalibratieprocedure voor de MPU6050
-
-Geavanceerde filteralgoritmes (Kalman)
-
-Extra knoppen voor menu en instellingen
-
-Geluidsfeedback via een buzzer
-
-Draadloze verbinding (Bluetooth/Wi-Fi)
-
-Conclusie
-
-Loops combineert real-time sensorinput met een Processing-game voor een meeslepende vliegervaring. De LED- en knop-feedback in een custom controller maken de game interactief en spannend.
-
-Licentie
-
-Dit project is gelicentieerd onder de Apache License 2.0 – zie het LICENSE bestand voor details.
