@@ -57,6 +57,35 @@ De schema’s staan in de map `imgs`:
   - **7** → SHOOT-knop → GND (INPUT_PULLUP)  
   - **1** → START-knop → GND (INPUT_PULLUP)  
 - `imgs/geschakeld_schema.jpg` — gedetailleerde schakeling  
+
+
+## Installatie & Bibliotheken
+
+1. **Arduino IDE**: installeer via de Library Manager:  
+   - `Wire`  
+   - `I2Cdev`  
+   - `MPU6050`  
+2. **Processing**: gebruik de standaard `processing.serial` library.  
+3. Clone deze repository en open:  
+   - `src/arduino/Loops.ino` in de Arduino IDE.  
+   - `src/processing/LoopsGame.pde` in Processing.
+
+## Gebruik
+
+### Bewegingsinput
+
+- De Arduino leest elke 10 ms gyro- en accelerometerdata van de MPU6050.  
+- Pitch en roll worden gecombineerd via een complementair filter (α = 0.98) voor stabiele besturing.  
+- De berekende hoeken (in graden) worden verzonden naar Processing als `pitch,roll`.
+
+### Seriële communicatie
+
+- **Arduino → Processing**:
+  ```cpp
+  Serial.print(pitch, 2);
+  Serial.print(",");
+  Serial.println(roll, 2);
+
 - `imgs/arduino.png` — pinout Arduino UNO  
 
 ![Bedradingsschema](imgs/schema.png)
