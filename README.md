@@ -86,6 +86,41 @@ De schema’s staan in de map `imgs`:
   Serial.print(",");
   Serial.println(roll, 2);
 
+## LED- en knop-feedback
+
+- In de Arduino-`loop()` worden inkomende commando’s gelezen:  
+  - **Ring-event** (`R,n`) → `handleEvent(redLedPin, …)`  
+  - **Target-event** (`T,n`) → `handleEvent(blueLedPin, …)`  
+- `handleEvent()` verzorgt:  
+  - Een korte LED-flash (300 ms)  
+  - Tellen van events voor streaks (3 events binnen 5000 ms)  
+  - Bij een streak een extra snelle flash-sequentie  
+- De shoot- en startknoppen zijn geconfigureerd als `INPUT_PULLUP`;  
+  bij indrukken wordt respectievelijk `SHOOT` of `START` verzonden.
+
+## Controller-behuizing
+
+- De behuizing is 3D-geprint en huisvest Arduino, MPU6050, LEDs en knoppen.  
+- De triggerknop voor schieten zit ergonomisch in de handgreep verwerkt.  
+- Alle bedrading en componenten zijn netjes weggewerkt, met toegang tot de USB-poort.
+
+## Verbeteringen
+
+- Kalibratieprocedure voor de MPU6050  
+- Geavanceerde filteralgoritmes (bv. Kalman)  
+- Extra knoppen voor menu en instellingen  
+- Geluidsfeedback via een buzzer  
+- Draadloze verbinding (Bluetooth of Wi-Fi)
+
+## Conclusie
+
+Loops combineert real-time sensorinput met een Processing-game voor een meeslepende vliegervaring. De geïntegreerde LED- en knop-feedback in een custom controller maken het geheel interactief en spannend.
+
+## Licentie
+
+Dit project is gelicentieerd onder de Apache License 2.0 – zie het `LICENSE` bestand voor details.  
+
+
 - `imgs/arduino.png` — pinout Arduino UNO  
 
 ![Bedradingsschema](imgs/schema.png)
