@@ -128,8 +128,29 @@ Onze workflow verliep in vijf duidelijke stappen, met na elke fase een test om d
 
 ## Gebruik
 
-- **Arduino → Processing**:  
+- **Arduino → Processing**  
   ```cpp
-  Serial.print(pitch,2);
+  Serial.print(pitch, 2);
   Serial.print(",");
-  Serial.println(roll,2);
+  Serial.println(roll, 2);
+
+port.write("R," + ringScore + "\n");
+port.write("T," + targetScore + "\n");
+port.write("SHOOT\n");
+port.write("START\n");
+
+## Controller-behuizing
+
+- 3D-geprint om alle componenten te huisvesten  
+- Ergonomische handgreep met geïntegreerde triggerknop  
+- Netjes weggewerkte bedrading en toegang tot USB/reset  
+
+## Verbeteringen
+
+- Uitbreiding met joystick voor richtoptie, los van vliegrichting  
+
+## Licentie
+
+Dit project is gelicentieerd onder de Apache License 2.0 – zie het `LICENSE`-bestand voor details.  
+
+
