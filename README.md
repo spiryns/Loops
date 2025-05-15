@@ -56,42 +56,50 @@ Onze workflow verliep in vijf duidelijke stappen, met na elke fase een test om d
 
 1. **Concept en sensorkeuze**  
    - Idee geformuleerd: bewegingsgestuurde controller met real-time visuele + haptische feedback  
-   - ICM20600 en AK09918 getest → drift en verbindingsproblemen  
+   - Na lang ICM20600 en AK09918 testen → te veel drift en verbindingsproblemen  
    - Overgestapt naar MPU6050 met `I2Cdev`-library en complementair filter (α = 0.98)  
+
 2. **Prototyping van input**  
    - Breadboard-opstelling: Arduino UNO + MPU6050  
    - Basale sketch: sensorwaarden via `Serial` versturen  
    - Offsetkalibratie bij opstart en validatie met bekende hoeken  
+
 3. **Game-ontwikkeling in Processing**  
-   - 3D-vliegtuigmodel (`Indoor RC Stick.obj`) en willekeurige ringen/targets  
+   - 3D-vliegtuigmodel en willekeurige ringen/targets  
    - Sensorpitch/roll stuurde vluchtvector en camera  
    - Ringpassage (`R,n`) en target-hit (`T,n`) stuurden feedback naar Arduino  
    - Intro-scherm, HUD, sparkles, bullets en visuele effecten geïmplementeerd  
+
 4. **Integratie hardware-feedback**  
    - Arduino-sketch uitgebreid met `handleEvent()` voor LED-flashes en streak-detectie  
    - LCD toegevoegd voor live scores  
    - Trigger- en startknoppen (`INPUT_PULLUP`) gekoppeld aan `SHOOT`/`START`  
+
 5. **Enclosure-ontwerp en final assembly**  
    - Overgezet in 3D-geprinte behuizing: ergonomische handgreep + trigger-slot  
    - Breadboard vervangen: VCC/GND-pinnen gebundeld met zip ties en solderingen  
-   - Jumper wires + kabelbinders zorgden voor trekontlasting  
+   - Male-female jumper wires + kabelbinders zorgden voor stevigere verbinding  
    - E2E test: volledige controller in game, finetuning framerate, debounce en soldeersterkte  
 
 ## Problemen
 
 - **Soldeer- en bedradingcomplexiteit**  
-  - Direct solderen in behuizing leidde tot brekende verbindingen  
-  - **Oplossing**: male–female jumper wires met kabelbinders voor trekontlasting  
+  - Direct solderen in van wires leidde tot brekende verbindingen  
+  - **Oplossing**: male–female jumper wires met kabelbinders
+
 - **Stroomvoorziening zonder breadboard**  
-  - Alle GND-pinnen van LCD, LEDs en knoppen met zip ties gebundeld en aan drie GND-pinnen van Arduino gesoldeerd  
-  - VCC-pinnen van LCD en sensor samengebonden en in 5 V gestoken  
+  - Alle GND-pinnen van LCD, LEDs en knoppen met zip ties gebundeld en aan drie aparte GND-pinnen van Arduino verbonden  
+  - VCC-pinnen van LCD en sensor samengebonden, gesolderdeerd in 5V verbonden  
   - **Resultaat**: compact, betrouwbaar en breadboard-vrij  
+
 - **Processing-rendering en performance**  
   - 3D-rendering met dynamische updates veroorzaakte haperingen  
   - **Oplossing**: optimalisatie van `draw()`, culling en 60 FPS-limiet  
+
 - **Score- en UI-integratie**  
-  - 2D-scoreboard in 3D-scène onleesbaar  
-  - **Oplossing**: scores via fysiek LCD op controller  
+  - 2D-scoreboard in 3D-scène niet haalbaar  
+  - **Oplossing**: scores via LCD op controller  
+
 - **Knopdebouncing**  
   - Mechanische knoppen veroorzaakten multiple pulsen  
   - **Oplossing**: software-debounce met korte delay en status-tracking  
