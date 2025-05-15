@@ -115,13 +115,13 @@ Onze workflow verliep in vijf duidelijke stappen, met na elke fase een test om d
 
 ## Bedrading
 
-- `imgs/schema.png` — basisbekabeling:  
+— basisbekabeling:  
   - I2C: **A4 (SDA)** → MPU6050 SDA, **A5 (SCL)** → MPU6050 SCL  
   - **8** → Rode LED via 220 Ω → GND  
   - **10** → Blauwe LED via 150 Ω → GND  
   - **7** → SHOOT-knop → GND (`INPUT_PULLUP`)  
   - **1** → START-knop → GND (`INPUT_PULLUP`)  
-- `imgs/geschakeld_schema.jpg` — detail  
+- ![geschakeldschema](imgs/geschakeld_schema.png) — detail  
 - `imgs/arduino.png` — pinout Arduino UNO  
 
 ![Bedradingsschema](imgs/bedradings_schema.png)
