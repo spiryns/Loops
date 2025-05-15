@@ -1,0 +1,363 @@
+import processing.serial.*;
+
+Serial port;
+float pitch = 0, roll = 0;
+// smoothing voor oriëntatie
+float smPitch = 0, smRoll = 0;
+final float SMOOTHING = 0.1;
+
+// Intro
+boolean intro = true;
+PGraphics clouds;
+color introBgColor   = color(255);
+color introTextColor = color(0);
+
+// Game-objecten
+ArrayList<PVector> rings, targets;
+final int TOTAL_RINGS   = 500;
+final int TOTAL_TARGETS = 250;
+int ringScore   = 0;
+int targetScore = 0;
+
+// Vliegtuig-model en positie
+PShape planeModel;
+PVector position;
+float speed = 5;
+
+// Sparkles & bullets
+ArrayList<Sparkle> sparkles;
+ArrayList<Bullet> bullets;
+
+// Achtergrond & state
+PImage bg;
+boolean gameOver = false;
+
+void setup() {
+  size(800, 600, P3D);
+  frameRate(60);
+
+  // Wolken voor intro
+  clouds = createGraphics(width, height);
+  clouds.beginDraw();
+  clouds.noStroke();
+  for (int i = 0; i < 200; i++) {
+    float x = random(width), y = random(height*0.6f);
+    float w = random(80, 200), h = w * 0.5f;
+    clouds.fill(255, 200);
+    clouds.ellipse(x, y, w, h);
+  }
+  clouds.endDraw();
+
+  // Serial
+  port = new Serial(this, "COM5", 115200);
+  port.clear();
+  port.bufferUntil('\n');
+
+  // Laad je OBJ (plaats "Indoor RC Stick.obj" in de data-map)
+  planeModel = loadShape("Indoor RC Stick.obj");
+
+  // Init lijsten en positie
+  rings    = new ArrayList<PVector>();
+  targets  = new ArrayList<PVector>();
+  sparkles = new ArrayList<Sparkle>();
+  bullets  = new ArrayList<Bullet>();
+  position = new PVector(0,0,0);
+
+  makeBG();
+  regenerate();
+}
+
+void draw() {
+  // smoothing
+  smPitch = lerp(smPitch, pitch, SMOOTHING);
+  smRoll  = lerp(smRoll,  roll,  SMOOTHING);
+
+  // Intro
+  if (intro) {
+    background(introBgColor);
+    image(clouds, 0, 0);
+    fill(introTextColor);
+    textAlign(CENTER, CENTER);
+    textSize(96);
+    text("LOOPS", width/2, height/2 - 40);
+    textSize(24);
+    text("Press the START button", width/2, height/2 + 10);
+    textSize(16);
+    text("By Your Name", width/2, height/2 + 50);
+    text("Tilt your device to fly", width/2, height/2 + 80);
+    return;
+  }
+
+  // Game rendering
+  background(bg);
+  lights();
+  perspective();
+
+  if (!gameOver) {
+    // 1) Beweeg met gesmoothed IMU
+    PVector dir = new PVector(
+      sin(smRoll)*cos(smPitch),
+      -sin(smPitch),
+      -cos(smRoll)*cos(smPitch)
+    ).normalize().mult(speed);
+    position.add(dir);
+
+    // 2) Camera
+    PVector cam = PVector.add(position, PVector.mult(dir, -80));
+    cam.y += 40;
+    camera(cam.x, cam.y, cam.z,
+           position.x, position.y, position.z,
+           0,1,0);
+
+    // 3) Grondvlak
+    pushMatrix();
+      rotateX(HALF_PI);
+      noStroke();
+      fill(34,139,34);
+      box(2000,1,2000);
+    popMatrix();
+
+    // 4) Ringen
+    stroke(255,0,0); noFill();
+    for (int i = rings.size()-1; i >= 0; i--) {
+      PVector r = rings.get(i);
+      if (PVector.dist(position, r) < 40) {
+        rings.remove(i);
+        ringScore++;
+        port.write("R,"+ringScore+"\n");
+        if (rings.isEmpty()) gameOver = true;
+        continue;
+      }
+      pushMatrix();
+        translate(r.x, r.y, r.z);
+        rotateX(PI/6);
+        ellipse(0,0,80,80);
+      popMatrix();
+    }
+
+    // 5) Targets
+    stroke(0,0,255); noFill();
+    for (PVector t : targets) {
+      pushMatrix();
+        translate(t.x, t.y, t.z);
+        rotateX(PI/6);
+        ellipse(0,0,60,60);
+      popMatrix();
+    }
+
+    // 6) Bullets
+    for (int i = bullets.size()-1; i >= 0; i--) {
+      Bullet b = bullets.get(i);
+      b.update();
+      b.display();
+      for (int j = targets.size()-1; j >= 0; j--) {
+        if (PVector.dist(b.pos, targets.get(j)) < 30) {
+          sparkles.add(new Sparkle(targets.get(j)));
+          targets.remove(j);
+          bullets.remove(i);
+          targetScore++;
+          port.write("T,"+targetScore+"\n");
+          break;
+        }
+      }
+    }
+
+    // 7) Sparkles
+    for (int i = sparkles.size()-1; i >= 0; i--) {
+      Sparkle s = sparkles.get(i);
+      s.update();
+      s.display();
+      if (s.isDead()) sparkles.remove(i);
+    }
+
+    // 8) Vliegtuig met OBJ en correcte oriëntatie
+    pushMatrix();
+      translate(position.x, position.y, position.z);
+      rotateZ(smRoll + 2*HALF_PI);
+      rotateX(smPitch);
+      rotateY(radians(270));
+      scale(3.0);
+      shape(planeModel);
+    popMatrix();
+
+  } else {
+    // Game-over scherm
+    resetMatrix();
+    hint(DISABLE_DEPTH_TEST);
+      fill(0,180); rect(0,0,width,height);
+      fill(255); textAlign(CENTER,CENTER);
+      textSize(64); text("GAME OVER", width/2, height/2);
+      textSize(24); text("Press R to restart", width/2, height/2+50);
+    hint(ENABLE_DEPTH_TEST);
+  }
+
+  // HUD
+  hint(DISABLE_DEPTH_TEST);
+    resetMatrix();
+    ortho(0,width,height,0,-1,1);
+    rectMode(CENTER); textAlign(CENTER,CENTER);
+    fill(0,220); noStroke();
+    rect(width/2, height/2, 360, 100, 10);
+    fill(255); textSize(18);
+    text("Ringen: " + ringScore + " / " + TOTAL_RINGS,
+         width/2, height/2 - 20);
+    text("Targets hit: " + targetScore,
+         width/2, height/2 + 20);
+  hint(ENABLE_DEPTH_TEST);
+}
+
+void keyPressed() {
+  if (!intro && gameOver && (key=='r'||key=='R')) {
+    regenerate();
+  }
+  // optionele shoot-knop
+  if (!intro && !gameOver && (key=='s'||key=='S')) {
+    PVector d = new PVector(
+      sin(smRoll)*cos(smPitch),
+      -sin(smPitch),
+      -cos(smRoll)*cos(smPitch)
+    );
+    bullets.add(new Bullet(position, d));
+  }
+}
+
+void serialEvent(Serial p) {
+  String ln = p.readStringUntil('\n');
+  if (ln == null) return;
+  ln = trim(ln);
+  if      (ln.equals("START")) intro = false;
+  else if (ln.equals("SHOOT")) {
+    PVector d = new PVector(
+      sin(smRoll)*cos(smPitch),
+      -sin(smPitch),
+      -cos(smRoll)*cos(smPitch)
+    );
+    bullets.add(new Bullet(position, d));
+  }
+  else {
+    String[] v = split(ln, ',');
+    if (v.length==2 && v[0].indexOf('.')>=0) {
+      pitch = radians(float(v[0]));
+      roll  = radians(float(v[1]));
+    }
+  }
+}
+
+void makeBG() {
+  bg = createImage(width, height, RGB);
+  bg.loadPixels();
+  color topC = color(70,130,180), botC = color(135,206,235);
+  for (int y=0; y<height; y++){
+    float t = map(y,0,height,0,1);
+    color c = lerpColor(topC, botC, t);
+    for(int x=0; x<width; x++){
+      bg.pixels[y*width + x] = c;
+    }
+  }
+  bg.updatePixels();
+}
+
+void regenerate() {
+  intro = true;
+  rings.clear();
+  targets.clear();
+  sparkles.clear();
+  bullets.clear();
+  ringScore   = 0;
+  targetScore = 0;
+  gameOver    = false;
+  position.set(0,0,0);
+
+  // parameters
+  float maxDepth   = 50000;  // dezelfde max diepte als voorheen
+  float minRadius  = 100;
+  float maxRadius  = 600;
+
+  // ----- Ringen in volume -----
+  for (int i = 0; i < TOTAL_RINGS; i++) {
+    // willekeurige diepte
+    float z = -random(0, maxDepth);
+
+    // een radius met wat bias (kies sqrt() voor uniformer volume)
+    float r = lerp(minRadius, maxRadius, sqrt(random(1)));
+
+    // willekeurige hoek
+    float a = random(TWO_PI);
+
+    // voeg wat jitter toe in x/y
+    float x = r * cos(a) + random(-50, 50);
+    float y = r * sin(a) + random(-50, 50);
+
+    rings.add(new PVector(x, y, z));
+  }
+
+  // ----- Targets in volume -----
+  for (int i = 0; i < TOTAL_TARGETS; i++) {
+    float z = -random(0, maxDepth);
+    float x = random(-maxRadius, maxRadius);
+    float y = random(-maxRadius/2, maxRadius/2);
+    targets.add(new PVector(x, y, z));
+  }
+
+  // stuur init-scores
+  port.write("R," + ringScore   + "\n");
+  port.write("T," + targetScore + "\n");
+}
+
+
+// ===== Sparkle-klasse =====
+class Sparkle {
+  PVector pos;
+  float   life;
+  Sparkle(PVector p) {
+    pos  = p.copy();
+    life = 255;
+  }
+  void update() {
+    life -= 8;
+  }
+  void display() {
+    pushMatrix();
+      translate(pos.x, pos.y, pos.z);
+      hint(DISABLE_DEPTH_TEST);
+        noFill();
+        stroke(255, 255, 200, life);
+        strokeWeight(2);
+        for (int i = 0; i < 12; i++) {
+          float a = TWO_PI*i/12 + frameCount*0.1;
+          float r = map(life, 0, 255, 5, 40);
+          line(0,0,0, cos(a)*r, sin(a)*r, 0);
+        }
+      hint(ENABLE_DEPTH_TEST);
+    popMatrix();
+  }
+  boolean isDead() {
+    return life <= 0;
+  }
+}
+
+// ===== Bullet-klasse =====
+class Bullet {
+  PVector pos, vel;
+  float   life;
+  Bullet(PVector s, PVector d) {
+    pos  = s.copy();
+    vel  = d.copy().normalize().mult(20);
+    life = 200;
+  }
+  void update() {
+    pos.add(vel);
+    life--;
+  }
+  void display() {
+    pushMatrix();
+      translate(pos.x, pos.y, pos.z);
+      noStroke();
+      fill(255,255,0);
+      sphere(5);
+    popMatrix();
+  }
+  boolean isDead() {
+    return life <= 0;
+  }
+}
