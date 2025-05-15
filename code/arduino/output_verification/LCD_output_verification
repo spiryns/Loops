@@ -1,0 +1,29 @@
+#include <LiquidCrystal.h>
+
+
+const int rs = 12, en = 11, d4 = 2, d5 = 3, d6 = 4, d7 = 5;
+LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
+
+void setup() {
+  lcd.begin(16, 2);
+  lcd.clear();
+  lcd.setCursor(0, 0);
+  lcd.print("LCD Test");
+  lcd.setCursor(0, 1);
+  lcd.print("Hallo Wereld!");
+  delay(2000);
+}
+
+void loop() {
+  // Tel op van 0 tot 9
+  for (int i = 0; i < 10; i++) {
+    lcd.clear();
+    lcd.setCursor(0, 0);
+    lcd.print("Score:");
+    lcd.setCursor(7, 0);
+    lcd.print(i);
+    lcd.setCursor(0, 1);
+    lcd.print("Loops Project");
+    delay(1000);
+  }
+}
