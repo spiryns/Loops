@@ -120,9 +120,7 @@ Onze workflow verliep in vijf duidelijke stappen, met na elke fase een test om d
   - **8** → Rode LED via 220 Ω → GND  
   - **10** → Blauwe LED via 150 Ω → GND  
   - **7** → SHOOT-knop → GND (`INPUT_PULLUP`)  
-  - **1** → START-knop → GND (`INPUT_PULLUP`)  
-- ![geschakeldschema](imgs/geschakeld_schema.jpg) — detail  
-- `imgs/arduino.png` — pinout Arduino UNO  
+  - **1** → START-knop → GND (`INPUT_PULLUP`)   
 
 ![Bedradingsschema](imgs/bedradings_schema.png)
 
