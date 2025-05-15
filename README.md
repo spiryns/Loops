@@ -66,7 +66,6 @@ Onze werkwijze bestond uit drie hoofdfases:
    - Bij het passeren van een ring of raken van een target stuurt Processing via `port.write("R,n")` of `port.write("T,n")` terug naar de Arduino.  
    - Voor de interface maakten we:  
      - Een intro-scherm met wolkenanimatie en startprompt  
-     - Een HUD met scoreweergave in de 3D-omgeving  
      - Bullet- en sparkle-effecten voor visuele feedback
 
 3. **Hardware- en enclosure-ontwerp**  
