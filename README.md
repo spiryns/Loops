@@ -122,6 +122,3 @@ Dit project is gelicentieerd onder de Apache License 2.0 – zie het `LICENSE` b
 - `imgs/arduino.png` — pinout Arduino UNO  
 
 ![Bedradingsschema](imgs/schema.png)
-
-## Projectstructuur
-
