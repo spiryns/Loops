@@ -124,7 +124,7 @@ Onze workflow verliep in vijf duidelijke stappen, met na elke fase een test om d
 - `imgs/geschakeld_schema.jpg` — detail  
 - `imgs/arduino.png` — pinout Arduino UNO  
 
-![Bedradingsschema](imgs/schema.png)
+![Bedradingsschema](imgs/bedradings_schema.png)
 
 ## Gebruik
 
