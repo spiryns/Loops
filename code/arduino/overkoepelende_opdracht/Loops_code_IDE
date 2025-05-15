@@ -1,0 +1,200 @@
+#include <Wire.h>
+#include "I2Cdev.h"
+#include "MPU6050.h"
+#include <LiquidCrystal.h>
+
+MPU6050 mpu;
+
+LiquidCrystal lcd(12, 11, 2, 3, 4, 5);
+
+
+const int redLedPin  = 8;
+const int blueLedPin = 10;
+
+
+const int shootPin = 7;
+const int startPin = 1;
+bool lastShootState = HIGH, lastStartState = HIGH;
+
+
+char inBuf[16];
+uint8_t bufPos = 0;
+
+
+unsigned long lastMs = 0;
+
+
+int ringScore   = 0;
+int targetScore = 0;
+
+// —— Streak-parameters ——
+const unsigned long STREAK_WINDOW   = 5000;  
+const int           STREAK_THRESHOLD = 3;    
+
+unsigned long redFirstTime   = 0;
+int           redCount       = 0;
+unsigned long blueFirstTime  = 0;
+int           blueCount      = 0;
+
+const unsigned long BASE_FLASH_MS = 300;  
+
+void setup() {
+  Wire.begin();
+  Serial.begin(115200);
+
+  pinMode(redLedPin, OUTPUT);
+  pinMode(blueLedPin, OUTPUT);
+  digitalWrite(redLedPin, LOW);
+  digitalWrite(blueLedPin, LOW);
+
+  pinMode(shootPin, INPUT_PULLUP);
+  pinMode(startPin, INPUT_PULLUP);
+
+  lcd.begin(16,2);
+  lcd.clear();
+  lcd.setCursor(0,0);
+  lcd.print("Wachten op START");
+  lcd.setCursor(0,1);
+  lcd.print("Druk knop op pin1");
+
+  mpu.initialize();
+  if (!mpu.testConnection()) {
+    lcd.clear();
+    lcd.setCursor(0,0);
+    lcd.print("MPU ERROR!");
+    while(1);
+  }
+
+  while (true) {
+    // óf serieel
+    if (Serial.available()) {
+      String s = Serial.readStringUntil('\n');
+      s.trim();
+      if (s.equals("START")) break;
+    }
+    // óf fysieke knop
+    bool st = digitalRead(startPin);
+    if (lastStartState==HIGH && st==LOW) {
+      Serial.println("START");
+      break;
+    }
+    lastStartState = st;
+  }
+
+  // Game-start
+  lcd.clear();
+  lcd.setCursor(0,0);
+  lcd.print("Ringen: 0");
+  lcd.setCursor(0,1);
+  lcd.print("Targets hit: 0");
+}
+
+void loop() {
+  // --- 1) Inkomende score-updates ---
+  while (Serial.available()) {
+    char c = Serial.read();
+    if (c == '\n') {
+      inBuf[bufPos] = '\0';
+
+      // R,<n> → rode ring
+      if (inBuf[0]=='R' && inBuf[1]==',') {
+        ringScore = atoi(inBuf+2);
+        handleEvent(redLedPin, 
+                    &redFirstTime, &redCount);
+      }
+      // T,<n> → blauwe target
+      else if (inBuf[0]=='T' && inBuf[1]==',') {
+        targetScore = atoi(inBuf+2);
+        handleEvent(blueLedPin, 
+                    &blueFirstTime, &blueCount);
+      }
+
+      bufPos = 0;
+      // LCD bijwerken
+      lcd.setCursor(0,0);
+      lcd.print("Ringen: ");
+      lcd.print(ringScore);
+      lcd.print("   ");
+      lcd.setCursor(0,1);
+      lcd.print("Targets hit: ");
+      lcd.print(targetScore);
+      lcd.print("   ");
+    }
+    else if (c!='\r' && bufPos < sizeof(inBuf)-1) {
+      inBuf[bufPos++] = c;
+    }
+  }
+
+  // --- 2) Knop SCHIET (pin 7) ---
+  bool shootSt = digitalRead(shootPin);
+  if (lastShootState==HIGH && shootSt==LOW) {
+    Serial.println("SHOOT");
+  }
+  lastShootState = shootSt;
+
+  // --- 3) (optioneel) nieuwe START ---
+  bool startSt = digitalRead(startPin);
+  if (lastStartState==HIGH && startSt==LOW) {
+    Serial.println("START");
+  }
+  lastStartState = startSt;
+
+  // --- 4) MPU uitlezen & verzenden ---
+  if (millis() - lastMs >= 10) {
+    lastMs = millis();
+    int16_t ax,ay,az,gx,gy,gz;
+    mpu.getMotion6(&ax,&ay,&az,&gx,&gy,&gz);
+    float accPitch = atan2((float)ax, sqrt((float)ay*ay+(float)az*az))*180/PI;
+    float accRoll  = atan2((float)ay, (float)az)*180/PI;
+    static float pitch=0, roll=0;
+    const float alpha=0.98, dt=0.01;
+    pitch = alpha*(pitch + gx/131.0*dt) + (1-alpha)*accPitch;
+    roll  = alpha*(roll  + gy/131.0*dt) + (1-alpha)*accRoll;
+    Serial.print(pitch,2);
+    Serial.print(',');
+    Serial.println(roll,2);
+  }
+}
+
+// Algemene handler voor score-events en streaks
+void handleEvent(int ledPin,
+                 unsigned long *firstTime,
+                 int *count) {
+  unsigned long now = millis();
+
+  // 1) standaard flash (uitgerekt naar BASE_FLASH_MS)
+  digitalWrite(ledPin, HIGH);
+  delay(BASE_FLASH_MS);
+  digitalWrite(ledPin, LOW);
+
+  // 2) streak-logica
+  if (*count == 0) {
+    // eerste event
+    *firstTime = now;
+    *count     = 1;
+  } else {
+    // binnen window? anders reset
+    if (now - *firstTime <= STREAK_WINDOW) {
+      (*count)++;
+    } else {
+      *firstTime = now;
+      *count     = 1;
+    }
+  }
+
+  // 3) detecteer streak
+  if (*count >= STREAK_THRESHOLD) {
+    streakFlash(ledPin);
+    *count = 0;  // reset na streak
+  }
+}
+
+// Laat LED snel knipperen als “streak feedback”
+void streakFlash(int ledPin) {
+  for (int i = 0; i < 6; i++) {
+    digitalWrite(ledPin, HIGH);
+    delay(80);
+    digitalWrite(ledPin, LOW);
+    delay(80);
+  }
+}
