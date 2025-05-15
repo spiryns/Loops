@@ -142,7 +142,7 @@ Onze workflow verliep in vijf duidelijke stappen, met na elke fase een test om d
   port.write("SHOOT\n");
   port.write("START\n");
 
-// Arduino behandelt serial-commando’s met handleEvent() en knoppen via INPUT_PULLUP
+Arduino behandelt serial-commando’s met handleEvent() en knoppen via INPUT_PULLUP
 
 
 
