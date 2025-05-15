@@ -47,7 +47,7 @@ Dit project gebruikt een MPU6050 motion sensor op een Arduino UNO om beweging en
 - Drukknop (Start) + interne pull-up  
 - LCD-scherm (scoreboard)  
 - 3D-geprinte controller-behuizing  
-- Optioneel breadboard en bedrading  
+- Breadboard (voor snelle tests) en bedrading  
 - USB-kabel  
 
 ## Aanpak
