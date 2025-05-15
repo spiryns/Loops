@@ -135,11 +135,12 @@ Onze workflow verliep in vijf duidelijke stappen, met na elke fase een test om d
   Serial.println(roll, 2);
 
 
-// Processing → Arduino
-port.write("R," + ringScore + "\n");
-port.write("T," + targetScore + "\n");
-port.write("SHOOT\n");
-port.write("START\n");
+- **Processing → Arduino**
+  ```cpp
+  port.write("R," + ringScore + "\n");
+  port.write("T," + targetScore + "\n");
+  port.write("SHOOT\n");
+  port.write("START\n");
 
 // Arduino behandelt serial-commando’s met handleEvent() en knoppen via INPUT_PULLUP
 
