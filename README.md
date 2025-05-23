@@ -113,6 +113,11 @@ Onze workflow verliep in vijf duidelijke stappen, met na elke fase een test om d
 - Custom 3D-geprinte behuizing met ergonomische handgreep  
 - Start- en reset-knop voor onbeperkte gameplay  
 
+![Feedback blauwe LED](imgs/Blauwe_target_geraakt_viatrigger_blauweLED_feedback_GIF.gif)
+![Feedback rode LED](imgs/Ring_doorvlogen_rodeLED_feedback_GIF.gif)
+
+
+
 ## Bedrading
 
 — basisbekabeling:  
@@ -149,6 +154,11 @@ Arduino behandelt serial-commando’s met handleEvent() en knoppen via INPUT_PUL
 - 3D-geprint om alle componenten te huisvesten  
 - Ergonomische handgreep met geïntegreerde triggerknop  
 - Netjes weggewerkte bedrading en toegang tot USB/reset  
+
+![Behuizing bovenkant](imgs/Behuizing.jpg)
+![Trigger knop](imgs/Trigger_button.jpg)
+
+
 
 ## Verbeteringen
 
